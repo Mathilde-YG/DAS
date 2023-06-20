@@ -1,0 +1,16 @@
+with user_sum_sale_price as (select user_id,
+ round(sum(sale_price),2) as sum_sale_price,
+from `thelook_ecommerce.order_items`
+group by user_id
+order by sum_sale_price desc),
+user_tile_list as (select *,
+ trunc((cume_dist() over(order by sum_sale_price desc)*100), 4) as cume_dist_sum_sale_price,
+ ntile(10) over (order by sum_sale_price desc) as ntile
+from user_sum_sale_price)
+select 
+ ntile,
+ min(sum_sale_price) as min_sum_sale_price,
+ max(cume_dist_sum_sale_price) as max_cume_dist_sum_sale_price
+from user_tile_list
+group by ntile
+order by ntile
